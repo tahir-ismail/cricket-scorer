@@ -20,7 +20,9 @@ public static partial class MatchEngine
             TargetSet t => ValidateTargetSet(state, t),
             PenaltyRuns p => ValidatePenaltyRuns(state, p),
             StrikeSwapped => ValidateStrikeSwapped(state),
-            _ => "Not supported yet."
+            ResultOverridden r => ValidateResultOverridden(state, r),
+            MatchClosed => ValidateMatchClosed(state),
+            _ => "Unknown event."
         };
     }
 
@@ -29,7 +31,7 @@ public static partial class MatchEngine
     {
         var error = Validate(state, e);
         if (error is not null) throw new InvalidEventException(error);
-        return e switch
+        var next = e switch
         {
             InningsStarted s => ApplyInningsStarted(state, s),
             BallBowled b => ApplyBall(state, b),
@@ -41,8 +43,11 @@ public static partial class MatchEngine
             TargetSet t => ApplyTargetSet(state, t),
             PenaltyRuns p => ApplyPenaltyRuns(state, p),
             StrikeSwapped => ApplyStrikeSwapped(state),
-            _ => throw new InvalidEventException("Not supported yet.")
+            ResultOverridden r => ApplyResultOverridden(state, r),
+            MatchClosed => ApplyMatchClosed(state),
+            _ => throw new InvalidEventException("Unknown event.")
         };
+        return WithResult(next);
     }
 
     // Rebuilds a match state by applying every event in order.
