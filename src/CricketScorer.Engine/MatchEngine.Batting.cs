@@ -23,4 +23,24 @@ public static partial class MatchEngine
         inn = inn.StrikerId is null ? inn with { StrikerId = e.BatterId } : inn with { NonStrikerId = e.BatterId };
         return ReplaceCurrent(state, inn);
     }
+
+    // Checks a batter at the crease can retire now (between balls only).
+    private static string? ValidateBatterRetired(MatchState state, BatterRetired e)
+    {
+        if (state.Next is not (NextAction.Bowl or NextAction.ChooseBowler))
+            return $"Can't retire a batter now: next step is {state.Next}.";
+        var inn = state.Current!;
+        if (e.BatterId != inn.StrikerId && e.BatterId != inn.NonStrikerId)
+            return "Only a batter at the crease can retire.";
+        return null;
+    }
+
+    // Retires a batter: hurt isn't a wicket, retired out is.
+    private static MatchState ApplyBatterRetired(MatchState state, BatterRetired e)
+    {
+        var inn = state.Current!.UpdateBatter(e.BatterId,
+            b => b with { Status = e.Hurt ? BatterStatus.RetiredHurt : BatterStatus.RetiredOut });
+        inn = e.Hurt ? ClearEnd(inn, e.BatterId) : TakeWicket(inn, e.BatterId);
+        return ReplaceCurrent(state, CheckInningsEnd(inn));
+    }
 }
