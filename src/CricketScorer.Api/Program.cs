@@ -1,0 +1,24 @@
+using CricketScorer.Api.Infrastructure;
+
+var builder = WebApplication.CreateBuilder(args);
+StartupChecks.RequireSecrets(builder.Configuration);
+
+builder.Services.AddControllers();
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
+builder.Services.AddOpenApi();
+
+var app = builder.Build();
+
+app.UseExceptionHandler();
+app.UseStatusCodePages();
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
+
+app.MapControllers();
+
+app.Run();
+
+public partial class Program;

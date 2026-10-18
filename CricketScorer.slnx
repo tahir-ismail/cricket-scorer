@@ -1,8 +1,10 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/CricketScorer.Api/CricketScorer.Api.csproj" />
     <Project Path="src/CricketScorer.Engine/CricketScorer.Engine.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/CricketScorer.Api.Tests/CricketScorer.Api.Tests.csproj" />
     <Project Path="tests/CricketScorer.Engine.Tests/CricketScorer.Engine.Tests.csproj" />
   </Folder>
 </Solution>
