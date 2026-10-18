@@ -1,5 +1,7 @@
 using System.Security.Cryptography;
+using CricketScorer.Api.Data;
 using CricketScorer.Api.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -26,11 +28,20 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.ConfigureServices(services => services.AddTransient<IStartupFilter, ThrowEndpointFilter>());
     }
 
-    // Prepares the shared test database.
-    public Task InitializeAsync() => Task.CompletedTask;
+    // Creates the shared test database by running the real migrations.
+    public async Task InitializeAsync()
+    {
+        using var scope = Services.CreateScope();
+        await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
+    }
 
-    // Cleans up after all tests in the collection.
-    public new Task DisposeAsync() => base.DisposeAsync().AsTask();
+    // Drops the test database after all tests in the collection.
+    public new async Task DisposeAsync()
+    {
+        using (var scope = Services.CreateScope())
+            await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.EnsureDeletedAsync();
+        await base.DisposeAsync();
+    }
 
     private sealed class ThrowEndpointFilter : IStartupFilter
     {
