@@ -1,7 +1,21 @@
 using System.Collections.Immutable;
+using System.Text.Json.Serialization;
 
 namespace CricketScorer.Engine;
 
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
+[JsonDerivedType(typeof(InningsStarted), "inningsStarted")]
+[JsonDerivedType(typeof(BallBowled), "ball")]
+[JsonDerivedType(typeof(BowlerChanged), "bowlerChanged")]
+[JsonDerivedType(typeof(BatterIn), "batterIn")]
+[JsonDerivedType(typeof(StrikeSwapped), "strikeSwapped")]
+[JsonDerivedType(typeof(BatterRetired), "batterRetired")]
+[JsonDerivedType(typeof(PenaltyRuns), "penaltyRuns")]
+[JsonDerivedType(typeof(OversChanged), "oversChanged")]
+[JsonDerivedType(typeof(TargetSet), "targetSet")]
+[JsonDerivedType(typeof(InningsEnded), "inningsEnded")]
+[JsonDerivedType(typeof(ResultOverridden), "resultOverridden")]
+[JsonDerivedType(typeof(MatchClosed), "matchClosed")]
 public abstract record MatchEvent(Guid Id);
 
 public sealed record InningsStarted(Guid Id, Guid BattingTeamId, Guid StrikerId, Guid NonStrikerId, Guid BowlerId,

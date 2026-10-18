@@ -22,6 +22,8 @@ public static partial class MatchEngine
             return DismissalRules.EitherBatter(d.Type)
                 ? "The batter out must be one of the two batters at the crease."
                 : "Only the striker can be out this way.";
+        if (DismissalRules.CreditsBowler(d.Type) && (b.BatRuns != 0 || b.ExtraRuns != 0 || b.Boundary))
+            return $"No runs can be scored on a ball where the batter is out {d.Type}.";
         if (DismissalRules.NeedsFielder(d.Type) && d.FielderId is null)
             return $"{d.Type} needs a fielder.";
         if (d.FielderId is { } f && !state.Setup.LineupFor(inn.BowlingTeamId)!.Players.Contains(f))

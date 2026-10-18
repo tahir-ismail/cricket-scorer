@@ -41,6 +41,7 @@ public sealed record InningsState(
     int? OversLimit,
     int? MaxOversPerBowler,
     int? Target,
+    bool TargetSetByScorer,
     InningsEndReason? EndReason)
 {
     public bool IsComplete => EndReason != null;

@@ -78,6 +78,7 @@ public static partial class MatchEngine
     private static MatchState ApplyInningsStarted(MatchState state, InningsStarted e)
     {
         var settings = state.Setup.Settings;
+        var chase = state.Innings.Count == 1 ? state.Innings[0] : null;
         var innings = new InningsState(
             BattingTeamId: e.BattingTeamId,
             BowlingTeamId: state.Setup.OpponentOf(e.BattingTeamId).TeamId,
@@ -98,9 +99,10 @@ public static partial class MatchEngine
             RunsThisOverOffBowler: 0,
             OverShared: false,
             FreeHitNext: false,
-            OversLimit: settings.OversPerSide,
-            MaxOversPerBowler: settings.MaxOversPerBowler,
-            Target: state.Innings.Count == 1 ? state.Innings[0].Runs + 1 : null,
+            OversLimit: chase?.OversLimit ?? settings.OversPerSide,
+            MaxOversPerBowler: chase?.MaxOversPerBowler ?? settings.MaxOversPerBowler,
+            Target: chase is null ? null : chase.Runs + 1,
+            TargetSetByScorer: false,
             EndReason: null);
 
         if (state.PendingPenalties.TryGetValue(e.BattingTeamId, out var penalty))

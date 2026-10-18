@@ -65,7 +65,7 @@ public static partial class MatchEngine
 
     // Sets the target for the current innings.
     private static MatchState ApplyTargetSet(MatchState state, TargetSet e) =>
-        ReplaceCurrent(state, CheckInningsEnd(state.Current! with { Target = e.Target }, state.Setup.Settings.BallsPerOver));
+        ReplaceCurrent(state, CheckInningsEnd(state.Current! with { Target = e.Target, TargetSetByScorer = true }, state.Setup.Settings.BallsPerOver));
 
     // Checks penalty runs can be awarded now.
     private static string? ValidatePenaltyRuns(MatchState state, PenaltyRuns e)
@@ -88,7 +88,18 @@ public static partial class MatchEngine
 
         var inn = AddPenalty(state.Innings[index], e.Runs);
         if (index == state.Innings.Count - 1) inn = CheckInningsEnd(inn, state.Setup.Settings.BallsPerOver);
-        return state with { Innings = state.Innings.SetItem(index, inn) };
+        state = state with { Innings = state.Innings.SetItem(index, inn) };
+        return index == 0 && state.Innings.Count > 1 ? MoveChaseTarget(state) : state;
+    }
+
+    // Resets the chase target to the first innings total + 1, unless the scorer set it by hand.
+    private static MatchState MoveChaseTarget(MatchState state)
+    {
+        var chase = state.Innings[1];
+        if (chase.TargetSetByScorer) return state;
+        chase = chase with { Target = state.Innings[0].Runs + 1 };
+        if (state.Innings.Count == 2) chase = CheckInningsEnd(chase, state.Setup.Settings.BallsPerOver);
+        return state with { Innings = state.Innings.SetItem(1, chase) };
     }
 
     // Adds penalty runs to an innings total and its extras.

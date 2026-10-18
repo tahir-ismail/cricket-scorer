@@ -9,7 +9,7 @@ public static class DismissalRules
         return extra switch
         {
             ExtraType.None => !freeHit,
-            ExtraType.Wide => type is DismissalType.Stumped or DismissalType.HitWicket,
+            ExtraType.Wide => !freeHit && type is DismissalType.Stumped or DismissalType.HitWicket,
             _ => false
         };
     }
