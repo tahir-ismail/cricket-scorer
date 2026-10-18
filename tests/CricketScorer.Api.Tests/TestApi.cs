@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using CricketScorer.Api.Auth;
+using CricketScorer.Api.Schools;
 
 namespace CricketScorer.Api.Tests;
 
@@ -23,6 +24,25 @@ public static class TestApi
         var auth = await response.ReadAsync<AuthResponse>();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.Token);
         return new Scorer(client, auth.User.Id, email);
+    }
+
+    // Registers a scorer who creates a new school and becomes its admin.
+    public static async Task<Scorer> NewSchoolAdminAsync(this ApiFactory factory, string school = "Westville")
+    {
+        var admin = await factory.RegisterAsync("Admin");
+        var response = await admin.Client.PostAsJsonAsync("/api/schools", new CreateSchoolRequest(school), Json);
+        response.EnsureSuccessStatusCode();
+        return admin with { SchoolId = (await response.ReadAsync<SchoolDto>()).Id };
+    }
+
+    // Registers a scorer who joins the admin's school with its join code.
+    public static async Task<Scorer> JoinAsync(this ApiFactory factory, Scorer admin)
+    {
+        var school = await (await admin.Client.GetAsync("/api/schools/me")).ReadAsync<SchoolDto>();
+        var scorer = await factory.RegisterAsync("Member");
+        var response = await scorer.Client.PostAsJsonAsync("/api/schools/join", new JoinSchoolRequest(school.JoinCode!), Json);
+        response.EnsureSuccessStatusCode();
+        return scorer with { SchoolId = school.Id };
     }
 
     // Reads a JSON response body using the API's JSON settings.
