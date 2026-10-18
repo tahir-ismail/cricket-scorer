@@ -22,7 +22,7 @@ public sealed class AuthController(UserManager<AppUser> users, TokenService toke
             Id = Guid.NewGuid(),
             Email = request.Email.Trim(),
             UserName = request.Email.Trim(),
-            DisplayName = request.DisplayName.Trim()
+            DisplayName = Names.Require(request.DisplayName, 80, "display")
         };
         var result = await users.CreateAsync(user, request.Password);
         if (!result.Succeeded)

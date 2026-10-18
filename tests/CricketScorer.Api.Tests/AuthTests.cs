@@ -52,6 +52,18 @@ public sealed class AuthTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.OK, (await Register(NewEmail(), "abcdefgh")).StatusCode);
     }
 
+    // Checks a blank or over-long display name is a 400, not a server error.
+    [Fact]
+    public async Task BadDisplayNameIs400()
+    {
+        foreach (var name in new[] { "   ", new string('x', 81) })
+        {
+            var response = await factory.CreateClient().PostAsJsonAsync("/api/auth/register",
+                new RegisterRequest(NewEmail(), TestApi.Password, name), TestApi.Json);
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+    }
+
     // Checks logging in with the right password returns a token valid for about 7 days.
     [Fact]
     public async Task LoginReturnsSevenDayToken()
