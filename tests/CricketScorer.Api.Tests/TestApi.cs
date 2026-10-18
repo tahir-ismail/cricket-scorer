@@ -1,0 +1,31 @@
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text.Json;
+using CricketScorer.Api.Auth;
+
+namespace CricketScorer.Api.Tests;
+
+public sealed record Scorer(HttpClient Client, Guid UserId, string Email, Guid? SchoolId = null);
+
+public static class TestApi
+{
+    public const string Password = "long-enough-pw";
+
+    public static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
+
+    // Registers a new scorer with a random email and returns a client that sends their token.
+    public static async Task<Scorer> RegisterAsync(this ApiFactory factory, string name = "Scorer")
+    {
+        var client = factory.CreateClient();
+        var email = $"{Guid.NewGuid():N}@test.local";
+        var response = await client.PostAsJsonAsync("/api/auth/register", new RegisterRequest(email, Password, name), Json);
+        response.EnsureSuccessStatusCode();
+        var auth = await response.ReadAsync<AuthResponse>();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.Token);
+        return new Scorer(client, auth.User.Id, email);
+    }
+
+    // Reads a JSON response body using the API's JSON settings.
+    public static async Task<T> ReadAsync<T>(this HttpResponseMessage response) =>
+        (await response.Content.ReadFromJsonAsync<T>(Json))!;
+}

@@ -49,7 +49,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next) => app =>
         {
             next(app);
-            app.UseEndpoints(e => e.MapGet("/test/throw", (HttpContext _) => throw new ApiException(418, "teapot")));
+            app.UseEndpoints(e => e.MapGet("/test/throw", (HttpContext _) => throw new ApiException(418, "teapot")).AllowAnonymous());
         };
     }
 }
