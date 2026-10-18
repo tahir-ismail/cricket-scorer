@@ -5,6 +5,7 @@ using CricketScorer.Api.Auth;
 using CricketScorer.Api.Schools;
 using CricketScorer.Api.Data;
 using CricketScorer.Api.Matches;
+using CricketScorer.Api.Sync;
 using CricketScorer.Api.Teams;
 using CricketScorer.Engine;
 
@@ -87,6 +88,26 @@ public static class TestApi
         var created = await response.ReadAsync<MatchCreatedDto>();
         return new TestMatch(created.Id, created.ShareCode, created.SessionId, teamA, a, teamB, b);
     }
+
+    // Sends sync operations for a match using the session it was created with.
+    public static Task<HttpResponseMessage> SyncAsync(this Scorer scorer, TestMatch match, params SyncOp[] ops) =>
+        scorer.SyncAsync(match, match.SessionId, ops);
+
+    // Sends sync operations for a match using the given session.
+    public static Task<HttpResponseMessage> SyncAsync(this Scorer scorer, TestMatch match, Guid sessionId, params SyncOp[] ops) =>
+        scorer.Client.PostAsJsonAsync($"/api/matches/{match.Id}/sync", new SyncRequest(sessionId, [.. ops]), Json);
+
+    // Builds an "add this event at this position" operation.
+    public static SyncOp Add(int sequence, MatchEvent e) => new("add", sequence, e, null);
+
+    // Builds an "undo this event" operation.
+    public static SyncOp Remove(Guid eventId) => new("remove", null, null, eventId);
+
+    // Builds the first innings start: team A's first two batters, team B's last player bowling.
+    public static InningsStarted StartFor(TestMatch m) => new(Guid.NewGuid(), m.TeamA, m.A[0], m.A[1], m.B[^1]);
+
+    // Builds a ball event.
+    public static BallBowled Ball(int runs = 0, bool boundary = false) => new(Guid.NewGuid(), runs, Boundary: boundary);
 
     // Reads a JSON response body using the API's JSON settings.
     public static async Task<T> ReadAsync<T>(this HttpResponseMessage response) =>

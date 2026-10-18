@@ -2,6 +2,7 @@ using CricketScorer.Api.Auth;
 using CricketScorer.Api.Data;
 using CricketScorer.Api.Infrastructure;
 using CricketScorer.Api.Matches;
+using CricketScorer.Api.Sync;
 using CricketScorer.Engine;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -52,6 +53,7 @@ builder.Services.AddAuthorization(o =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<CurrentUser>();
 builder.Services.AddScoped<MatchLoader>();
+builder.Services.AddScoped<SyncService>();
 builder.Services.AddSingleton<TokenService>();
 
 builder.Services.AddControllers()
