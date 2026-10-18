@@ -76,6 +76,7 @@ public static partial class MatchEngine
             PreviousOverBowlerId: null,
             ThisOver: [],
             RunsThisOverOffBowler: 0,
+            OverShared: false,
             FreeHitNext: false,
             OversLimit: settings.OversPerSide,
             MaxOversPerBowler: settings.MaxOversPerBowler,

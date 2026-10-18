@@ -35,6 +35,7 @@ public sealed record InningsState(
     Guid? PreviousOverBowlerId,
     ImmutableList<string> ThisOver,
     int RunsThisOverOffBowler,
+    bool OverShared,
     bool FreeHitNext,
     int? OversLimit,
     int? MaxOversPerBowler,

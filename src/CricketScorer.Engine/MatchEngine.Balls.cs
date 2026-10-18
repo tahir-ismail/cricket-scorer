@@ -67,7 +67,7 @@ public static partial class MatchEngine
     // Finishes an over: records a maiden, swaps ends and waits for the next bowler.
     private static InningsState EndOver(InningsState inn, Guid bowlerId)
     {
-        if (inn.RunsThisOverOffBowler == 0)
+        if (inn.RunsThisOverOffBowler == 0 && !inn.OverShared)
             inn = inn.UpdateBowler(bowlerId, f => f with { Maidens = f.Maidens + 1 });
         return SwapEnds(inn) with { PreviousOverBowlerId = bowlerId, BowlerId = null };
     }
