@@ -85,6 +85,7 @@ public static partial class MatchEngine
             Runs: 0,
             Wickets: 0,
             LegalBalls: 0,
+            BallsPerOver: settings.BallsPerOver,
             Extras: Extras.None,
             Batters: [BatterScore.New(e.StrikerId), BatterScore.New(e.NonStrikerId)],
             Bowlers: [BowlerFigures.Empty(e.BowlerId)],

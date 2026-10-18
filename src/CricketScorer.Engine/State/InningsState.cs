@@ -25,6 +25,7 @@ public sealed record InningsState(
     int Runs,
     int Wickets,
     int LegalBalls,
+    int BallsPerOver,
     Extras Extras,
     ImmutableList<BatterScore> Batters,
     ImmutableList<BowlerFigures> Bowlers,
@@ -51,6 +52,23 @@ public sealed record InningsState(
     // Players who retired hurt and haven't come back.
     public IEnumerable<Guid> RetiredHurtBatters =>
         Batters.Where(b => b.Status == BatterStatus.RetiredHurt).Select(b => b.PlayerId);
+
+    // Overs bowled so far, e.g. "14.3".
+    public string Overs => OversText(LegalBalls, BallsPerOver);
+
+    // Runs per over so far, to 2 decimal places.
+    public decimal RunRate => LegalBalls == 0 ? 0m : Math.Round(Runs * (decimal)BallsPerOver / LegalBalls, 2);
+
+    // Runs still needed to reach the target, or null without a target.
+    public int? RunsNeeded => Target is int t ? Math.Max(0, t - Runs) : null;
+
+    // Legal balls left in the innings, or null without an overs limit.
+    public int? BallsLeft => OversLimit is int o ? Math.Max(0, o * BallsPerOver - LegalBalls) : null;
+
+    // Runs per over needed to win, or null without both a target and an overs limit.
+    public decimal? RequiredRunRate => RunsNeeded is int need && BallsLeft is int left && left > 0
+        ? Math.Round(need * (decimal)BallsPerOver / left, 2)
+        : null;
 
     // Formats a number of legal balls as overs, e.g. 21 balls of 6 is "3.3".
     public static string OversText(int legalBalls, int ballsPerOver) =>
