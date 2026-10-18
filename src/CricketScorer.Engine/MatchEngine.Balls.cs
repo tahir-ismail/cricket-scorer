@@ -6,7 +6,6 @@ public static partial class MatchEngine
     private static string? ValidateBall(MatchState state, BallBowled b)
     {
         if (state.Next != NextAction.Bowl) return $"Can't bowl now: next step is {state.Next}.";
-        if (b.Extra != ExtraType.None) return "Not supported yet.";
         return BallRules.ValidateRuns(b);
     }
 
@@ -24,8 +23,11 @@ public static partial class MatchEngine
         {
             Runs = inn.Runs + BallRules.TeamRuns(b),
             LegalBalls = inn.LegalBalls + (legal ? 1 : 0),
+            Extras = AddExtras(inn.Extras, b),
             ThisOver = inn.ThisOver.Add(BallRules.ChipText(b)),
-            RunsThisOverOffBowler = inn.RunsThisOverOffBowler + offBowler
+            RunsThisOverOffBowler = inn.RunsThisOverOffBowler + offBowler,
+            FreeHitNext = state.Setup.Settings.FreeHitsEnabled
+                && (b.Extra == ExtraType.NoBall || (inn.FreeHitNext && b.Extra == ExtraType.Wide))
         };
 
         inn = inn.UpdateBatter(strikerId, s => s with
@@ -39,7 +41,9 @@ public static partial class MatchEngine
         inn = inn.UpdateBowler(bowlerId, f => f with
         {
             RunsConceded = f.RunsConceded + offBowler,
-            LegalBalls = f.LegalBalls + (legal ? 1 : 0)
+            LegalBalls = f.LegalBalls + (legal ? 1 : 0),
+            Wides = f.Wides + (b.Extra == ExtraType.Wide ? 1 + b.ExtraRuns : 0),
+            NoBalls = f.NoBalls + (b.Extra == ExtraType.NoBall ? 1 : 0)
         });
 
         if (BallRules.RunsRun(b) % 2 == 1) inn = SwapEnds(inn);
@@ -49,6 +53,16 @@ public static partial class MatchEngine
 
         return ReplaceCurrent(state, inn);
     }
+
+    // Adds this ball's extras to the innings breakdown (byes off a no-ball count as byes).
+    private static Extras AddExtras(Extras x, BallBowled b) => b.Extra switch
+    {
+        ExtraType.Wide => x with { Wides = x.Wides + 1 + b.ExtraRuns },
+        ExtraType.NoBall => x with { NoBalls = x.NoBalls + 1, Byes = x.Byes + b.ExtraRuns },
+        ExtraType.Bye => x with { Byes = x.Byes + b.ExtraRuns },
+        ExtraType.LegBye => x with { LegByes = x.LegByes + b.ExtraRuns },
+        _ => x
+    };
 
     // Finishes an over: records a maiden, swaps ends and waits for the next bowler.
     private static InningsState EndOver(InningsState inn, Guid bowlerId)
