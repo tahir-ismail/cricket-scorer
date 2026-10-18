@@ -18,8 +18,7 @@ public sealed class SchoolsController(AppDbContext db, CurrentUser current) : Co
     {
         var user = await current.GetAsync();
         if (user.SchoolId is not null) throw new ApiException(StatusCodes.Status409Conflict, "You're already in a school.");
-        var name = request.Name?.Trim() ?? "";
-        if (name.Length is 0 or > 100) throw new ApiException(StatusCodes.Status400BadRequest, "A school name needs 1 to 100 characters.");
+        var name = Names.Require(request.Name, 100, "school");
 
         var school = new School
         {
