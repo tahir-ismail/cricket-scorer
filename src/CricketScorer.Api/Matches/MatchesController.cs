@@ -102,6 +102,20 @@ public sealed class MatchesController(AppDbContext db, CurrentUser current, Matc
             EventDtos(loaded.Events));
     }
 
+    // Starts a new scoring session on this device (owner only); the old device's session stops being accepted.
+    [HttpPost("{id:guid}/sessions")]
+    public async Task<ActionResult<SessionStartedDto>> StartSession(Guid id, StartSessionRequest request)
+    {
+        var loaded = await loader.LoadAsync(id, await current.RequireSchoolIdAsync());
+        if (loaded.Match.OwnerUserId != current.UserId)
+            throw new ApiException(StatusCodes.Status403Forbidden, "Only the scorer who created this match can score it.");
+        var session = NewSession(id, request.DeviceLabel);
+        db.ScoringSessions.Add(session);
+        loaded.Match.ActiveSessionId = session.Id;
+        await db.SaveChangesAsync();
+        return StatusCode(StatusCodes.Status201Created, new SessionStartedDto(session.Id, EventDtos(loaded.Events)));
+    }
+
     // Converts stored events to the API's event shape, in order.
     public static List<EventDto> EventDtos(IEnumerable<StoredEvent> events) =>
         events.Select(e => new EventDto(e.Sequence, MatchLoader.Read(e))).ToList();

@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using System.Text.Json;
 using CricketScorer.Api.Data;
 using CricketScorer.Api.Infrastructure;
 using CricketScorer.Engine;
@@ -30,8 +29,7 @@ public sealed class MatchLoader(AppDbContext db)
     }
 
     // Reads a stored event's JSON back into an engine event.
-    public static MatchEvent Read(StoredEvent stored) =>
-        JsonSerializer.Deserialize<MatchEvent>(stored.Json, new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+    public static MatchEvent Read(StoredEvent stored) => EventJson.Deserialize(stored.Json);
 
     // Loads the match's live events in order and replays them through the engine.
     private async Task<LoadedMatch> BuildAsync(Match? match)

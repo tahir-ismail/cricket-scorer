@@ -18,7 +18,7 @@ public static class TestApi
 {
     public const string Password = "long-enough-pw";
 
-    public static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
+    public static readonly JsonSerializerOptions Json = EventJson.Options;
 
     // Registers a new scorer with a random email and returns a client that sends their token.
     public static async Task<Scorer> RegisterAsync(this ApiFactory factory, string name = "Scorer")

@@ -2,6 +2,7 @@ using CricketScorer.Api.Auth;
 using CricketScorer.Api.Data;
 using CricketScorer.Api.Infrastructure;
 using CricketScorer.Api.Matches;
+using CricketScorer.Engine;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -53,7 +54,8 @@ builder.Services.AddScoped<CurrentUser>();
 builder.Services.AddScoped<MatchLoader>();
 builder.Services.AddSingleton<TokenService>();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(o => EventJson.Configure(o.JsonSerializerOptions));
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddOpenApi();

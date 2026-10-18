@@ -53,3 +53,7 @@ public sealed record MatchDetailDto(
     bool IsOwner,
     Guid? ActiveSessionId,
     List<EventDto> Events);
+
+public sealed record StartSessionRequest(string? DeviceLabel);
+
+public sealed record SessionStartedDto(Guid SessionId, List<EventDto> Events);
