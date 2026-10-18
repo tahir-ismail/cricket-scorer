@@ -3,11 +3,16 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using CricketScorer.Api.Auth;
 using CricketScorer.Api.Schools;
+using CricketScorer.Api.Data;
+using CricketScorer.Api.Matches;
 using CricketScorer.Api.Teams;
+using CricketScorer.Engine;
 
 namespace CricketScorer.Api.Tests;
 
 public sealed record Scorer(HttpClient Client, Guid UserId, string Email, Guid? SchoolId = null);
+
+public sealed record TestMatch(Guid Id, string ShareCode, Guid SessionId, Guid TeamA, List<Guid> A, Guid TeamB, List<Guid> B);
 
 public static class TestApi
 {
@@ -62,6 +67,25 @@ public static class TestApi
             ids.Add((await player.ReadAsync<PlayerDto>()).Id);
         }
         return (team.Id, ids);
+    }
+
+    // Builds a match request for two teams, with every squad player in the XI in squad order.
+    public static CreateMatchRequest MatchRequest(Guid teamA, List<Guid> a, Guid teamB, List<Guid> b,
+        MatchFormat format = MatchFormat.T20, int? overs = null) =>
+        new(Guid.NewGuid(), new DateOnly(2026, 10, 18), "Westville Oval", teamA, teamB, a, b, teamA, TossDecision.Bat,
+            format, overs, null, null, null, "Test phone");
+
+    // Creates two fresh teams (the second an opponent) and a match between them.
+    public static async Task<TestMatch> CreateMatchAsync(this Scorer scorer, int xi = 11,
+        MatchFormat format = MatchFormat.T20, int? overs = null)
+    {
+        var (teamA, a) = await scorer.CreateTeamAsync($"Home {Guid.NewGuid():N}"[..20], xi);
+        var (teamB, b) = await scorer.CreateTeamAsync($"Away {Guid.NewGuid():N}"[..20], xi, isOpponent: true);
+        var request = MatchRequest(teamA, a, teamB, b, format, overs);
+        var response = await scorer.Client.PostAsJsonAsync("/api/matches", request, Json);
+        response.EnsureSuccessStatusCode();
+        var created = await response.ReadAsync<MatchCreatedDto>();
+        return new TestMatch(created.Id, created.ShareCode, created.SessionId, teamA, a, teamB, b);
     }
 
     // Reads a JSON response body using the API's JSON settings.

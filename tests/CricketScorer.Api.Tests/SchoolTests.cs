@@ -104,12 +104,15 @@ public sealed class SchoolTests(ApiFactory factory)
     {
         var admin = await factory.NewSchoolAdminAsync();
         var member = await factory.JoinAsync(admin);
+        var match = await admin.CreateMatchAsync();
+        Assert.Equal(HttpStatusCode.OK, (await member.Client.GetAsync($"/api/matches/{match.Id}")).StatusCode);
         var remove = await admin.Client.DeleteAsync($"/api/schools/me/members/{member.UserId}");
         Assert.Equal(HttpStatusCode.NoContent, remove.StatusCode);
         var response = await member.Client.GetAsync("/api/schools/me");
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         Assert.Equal("Join or create a school first.", (await response.ReadAsync<ProblemDetails>()).Title);
         Assert.Single((await MySchool(admin)).Members);
+        Assert.Equal(HttpStatusCode.Forbidden, (await member.Client.GetAsync($"/api/matches/{match.Id}")).StatusCode);
     }
 
     // Checks a scorer without a school is told to join one.

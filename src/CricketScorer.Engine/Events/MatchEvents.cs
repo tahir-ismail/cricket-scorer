@@ -40,6 +40,6 @@ public sealed record TargetSet(Guid Id, int Target) : MatchEvent(Id);
 
 public sealed record InningsEnded(Guid Id, InningsEndReason Reason) : MatchEvent(Id);
 
-public sealed record ResultOverridden(Guid Id, ResultType Type, Guid? WinnerTeamId, string Text) : MatchEvent(Id);
+public sealed record ResultOverridden(Guid Id, [property: JsonPropertyName("resultType")] ResultType Type, Guid? WinnerTeamId, string Text) : MatchEvent(Id);
 
 public sealed record MatchClosed(Guid Id) : MatchEvent(Id);
