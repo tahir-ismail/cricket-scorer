@@ -16,6 +16,10 @@ public static partial class MatchEngine
             BatterIn i => ValidateBatterIn(state, i),
             BatterRetired r => ValidateBatterRetired(state, r),
             InningsEnded x => ValidateInningsEnded(state, x),
+            OversChanged o => ValidateOversChanged(state, o),
+            TargetSet t => ValidateTargetSet(state, t),
+            PenaltyRuns p => ValidatePenaltyRuns(state, p),
+            StrikeSwapped => ValidateStrikeSwapped(state),
             _ => "Not supported yet."
         };
     }
@@ -33,6 +37,10 @@ public static partial class MatchEngine
             BatterIn i => ApplyBatterIn(state, i),
             BatterRetired r => ApplyBatterRetired(state, r),
             InningsEnded x => ApplyInningsEnded(state, x),
+            OversChanged o => ApplyOversChanged(state, o),
+            TargetSet t => ApplyTargetSet(state, t),
+            PenaltyRuns p => ApplyPenaltyRuns(state, p),
+            StrikeSwapped => ApplyStrikeSwapped(state),
             _ => throw new InvalidEventException("Not supported yet.")
         };
     }
@@ -86,8 +94,14 @@ public static partial class MatchEngine
             FreeHitNext: false,
             OversLimit: settings.OversPerSide,
             MaxOversPerBowler: settings.MaxOversPerBowler,
-            Target: null,
+            Target: state.Innings.Count == 1 ? state.Innings[0].Runs + 1 : null,
             EndReason: null);
+
+        if (state.PendingPenalties.TryGetValue(e.BattingTeamId, out var penalty))
+        {
+            innings = AddPenalty(innings, penalty);
+            state = state with { PendingPenalties = state.PendingPenalties.Remove(e.BattingTeamId) };
+        }
         return state with { Innings = state.Innings.Add(innings) };
     }
 }

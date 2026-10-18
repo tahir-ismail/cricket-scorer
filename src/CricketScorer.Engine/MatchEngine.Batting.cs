@@ -41,6 +41,6 @@ public static partial class MatchEngine
         var inn = state.Current!.UpdateBatter(e.BatterId,
             b => b with { Status = e.Hurt ? BatterStatus.RetiredHurt : BatterStatus.RetiredOut });
         inn = e.Hurt ? ClearEnd(inn, e.BatterId) : TakeWicket(inn, e.BatterId);
-        return ReplaceCurrent(state, CheckInningsEnd(inn));
+        return ReplaceCurrent(state, CheckInningsEnd(inn, state.Setup.Settings.BallsPerOver));
     }
 }

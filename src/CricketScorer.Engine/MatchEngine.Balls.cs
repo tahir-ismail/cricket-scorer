@@ -74,7 +74,7 @@ public static partial class MatchEngine
         if (b.Dismissal is { } d)
             inn = RecordWicket(inn, d, bowlerId);
 
-        return ReplaceCurrent(state, CheckInningsEnd(inn));
+        return ReplaceCurrent(state, CheckInningsEnd(inn, state.Setup.Settings.BallsPerOver));
     }
 
     // Marks a batter out, credits the bowler if it's theirs, and empties that batter's end.
