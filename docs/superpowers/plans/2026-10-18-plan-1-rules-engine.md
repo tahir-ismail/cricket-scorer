@@ -15,7 +15,7 @@
 | Plan | Builds | Depends on |
 |------|--------|-----------|
 | **1 — Rules engine** (this file) | `CricketScorer.Engine` + tests | — |
-| 2 — Database and API | ASP.NET Core API, EF Core + SQL Server (LocalDB for dev), Identity auth, schools and join codes, teams and players, matches, event sync endpoint (idempotent, scoring sessions), scorecard endpoint, API tests | 1 |
+| **2 — Database and API** (built: `docs/superpowers/plans/2026-10-18-plan-2-database-api.md`) | ASP.NET Core API, EF Core + SQL Server (LocalDB for dev), Identity auth, schools and join codes, teams and players, matches, event sync endpoint (idempotent, scoring sessions), scorecard endpoint, API tests | 1 |
 | 3 — Scorer front end | Scoring-screen mockup → Tahir's feedback → Blazor WASM PWA: login, school, teams, match setup, scoring screen, scorecard | 1, 2 |
 | 4 — Offline and sync | Local event store (IndexedDB), sync queue, sync indicator, takeover and rejected-event warnings, offline app shell | 2, 3 |
 | 5 — Live viewer | SignalR hub, public share-code page, live updates | 2, 3 |

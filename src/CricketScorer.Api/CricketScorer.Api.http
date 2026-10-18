@@ -1,6 +1,65 @@
 @host = http://localhost:5098
+# Paste the token from the register or login response here (it is not a secret you commit: it expires in 7 days).
+@token = paste-token-here
+@matchId = paste-match-id-here
+@sessionId = paste-session-id-here
+@shareCode = paste-share-code-here
 
 GET {{host}}/api/health
-Accept: application/json
 
 ###
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "email": "scorer@example.com", "password": "long-enough-pw", "displayName": "Tahir" }
+
+###
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "email": "scorer@example.com", "password": "long-enough-pw" }
+
+###
+POST {{host}}/api/schools
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "name": "Westville Boys' High" }
+
+###
+GET {{host}}/api/schools/me
+Authorization: Bearer {{token}}
+
+###
+POST {{host}}/api/teams
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "name": "Westville U16A", "isOpponent": false }
+
+###
+GET {{host}}/api/teams
+Authorization: Bearer {{token}}
+
+###
+GET {{host}}/api/matches
+Authorization: Bearer {{token}}
+
+###
+POST {{host}}/api/matches/{{matchId}}/sync
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sessionId": "{{sessionId}}",
+  "ops": [
+    { "kind": "add", "sequence": 2, "event": { "type": "ball", "id": "{{$guid}}", "batRuns": 4, "boundary": true } }
+  ]
+}
+
+###
+GET {{host}}/api/matches/{{matchId}}/scorecard
+Authorization: Bearer {{token}}
+
+###
+GET {{host}}/api/share/{{shareCode}}/scorecard
