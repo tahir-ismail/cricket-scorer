@@ -13,6 +13,7 @@ public static partial class MatchEngine
             InningsStarted s => ValidateInningsStarted(state, s),
             BallBowled b => ValidateBall(state, b),
             BowlerChanged c => ValidateBowlerChanged(state, c),
+            BatterIn i => ValidateBatterIn(state, i),
             _ => "Not supported yet."
         };
     }
@@ -27,6 +28,7 @@ public static partial class MatchEngine
             InningsStarted s => ApplyInningsStarted(state, s),
             BallBowled b => ApplyBall(state, b),
             BowlerChanged c => ApplyBowlerChanged(state, c),
+            BatterIn i => ApplyBatterIn(state, i),
             _ => throw new InvalidEventException("Not supported yet.")
         };
     }

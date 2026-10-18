@@ -6,7 +6,27 @@ public static partial class MatchEngine
     private static string? ValidateBall(MatchState state, BallBowled b)
     {
         if (state.Next != NextAction.Bowl) return $"Can't bowl now: next step is {state.Next}.";
-        return BallRules.ValidateRuns(b);
+        return BallRules.ValidateRuns(b) ?? ValidateDismissal(state, b);
+    }
+
+    // Checks the dismissal on a ball (if any) is possible.
+    private static string? ValidateDismissal(MatchState state, BallBowled b)
+    {
+        if (b.Dismissal is not { } d) return null;
+        var inn = state.Current!;
+        if (!DismissalRules.IsAllowed(d.Type, b.Extra, inn.FreeHitNext))
+            return inn.FreeHitNext && b.Extra == ExtraType.None
+                ? $"A batter can't be out {d.Type} on a free hit."
+                : $"A batter can't be out {d.Type} on this kind of ball.";
+        if (d.BatterOutId != inn.StrikerId && !(DismissalRules.EitherBatter(d.Type) && d.BatterOutId == inn.NonStrikerId))
+            return DismissalRules.EitherBatter(d.Type)
+                ? "The batter out must be one of the two batters at the crease."
+                : "Only the striker can be out this way.";
+        if (DismissalRules.NeedsFielder(d.Type) && d.FielderId is null)
+            return $"{d.Type} needs a fielder.";
+        if (d.FielderId is { } f && !state.Setup.LineupFor(inn.BowlingTeamId)!.Players.Contains(f))
+            return "The fielder must be in the fielding team.";
+        return null;
     }
 
     // Applies a ball: runs, batter and bowler figures, strike rotation and the end of the over.
@@ -51,8 +71,40 @@ public static partial class MatchEngine
         if (legal && inn.LegalBalls % state.Setup.Settings.BallsPerOver == 0)
             inn = EndOver(inn, bowlerId);
 
+        if (b.Dismissal is { } d)
+            inn = RecordWicket(inn, d, bowlerId);
+
         return ReplaceCurrent(state, inn);
     }
+
+    // Marks a batter out, credits the bowler if it's theirs, and empties that batter's end.
+    private static InningsState RecordWicket(InningsState inn, Dismissal d, Guid bowlerId)
+    {
+        var credited = DismissalRules.CreditsBowler(d.Type);
+        inn = inn.UpdateBatter(d.BatterOutId, s => s with
+        {
+            Status = BatterStatus.Out,
+            Dismissal = d,
+            DismissedByBowlerId = credited ? bowlerId : null
+        });
+        if (credited) inn = inn.UpdateBowler(bowlerId, f => f with { Wickets = f.Wickets + 1 });
+        return TakeWicket(inn, d.BatterOutId);
+    }
+
+    // Adds a wicket and fall of wicket, and empties the dismissed batter's end.
+    private static InningsState TakeWicket(InningsState inn, Guid batterId)
+    {
+        var wickets = inn.Wickets + 1;
+        return ClearEnd(inn, batterId) with
+        {
+            Wickets = wickets,
+            FallOfWickets = inn.FallOfWickets.Add(new FallOfWicket(wickets, inn.Runs, batterId, inn.LegalBalls))
+        };
+    }
+
+    // Empties whichever end the given batter is at.
+    private static InningsState ClearEnd(InningsState inn, Guid batterId) =>
+        inn.StrikerId == batterId ? inn with { StrikerId = null } : inn with { NonStrikerId = null };
 
     // Adds this ball's extras to the innings breakdown (byes off a no-ball count as byes).
     private static Extras AddExtras(Extras x, BallBowled b) => b.Extra switch
